@@ -26,46 +26,43 @@ export default function Square() {
 }
 */
 
-function Board( { isXNext, squares, onPlay }) {
+function Board( { xIsNext, squares, onPlay }) {
   // State is a way to store data in a component
   // private to that component
   // const [squares, setSquares] = useState(Array(9).fill(null));
-  // const [isXNext, setIsXNext] = useState(true);
-  // const winner = calculateVinner(squares);
+  // const [xIsNext, setxIsNext] = useState(true);
+
+  const winner = calculateVinner(squares);
   let status;
   if (winner) {
     status = "Winner is: " + winner;
   } else {
-    status = "Next player: " + (isXNext ? "X" : "O");
+    status = "Next player: " + (xIsNext ? "X" : "O");
   }
 
   function handleClick(squareIndex) {
     if (squares[squareIndex] || calculateVinner(squares)) {
       return;
     }
-
-
     const nextSquares = [...squares];
     // nextSquares = squares.slice();
-    if (isXNext) {
+    if (xIsNext) {
       nextSquares[squareIndex] = 'X';
     }
     else {
       nextSquares[squareIndex] = 'O';
     }
     onPlay(nextSquares)
-    // setIsXNext(!isXNext);
+  }
+    
+    // setxIsNext(!xIsNext);
     // setSquares(newSquares);
     // setSquare will re-render component, as well as child components, board, and squares
-  }
+  
 
   return (
     <>
-    <div
-      className="status"
-      >
-        {status}
-        </div>
+    <div className="status">{status}</div>
     <div className="board-row">
       <Square value={squares[0]} onSquareClick={() => handleClick(0)} />
       <Square value={squares[1]} onSquareClick={() => handleClick(1)} />
@@ -143,14 +140,56 @@ const calculateVinner = (squares) => {
 
 
 export default function Game() {
-  const [xIsNext, setXIsNext] = useState(true);
-  const [history, setHistory] = useState([array(9).fill(null)]);
-  const currentSquares = history[history.length - 1];
+  const [history, setHistory] = useState([Array(9).fill(null)]);
+  const [currentMove, setCurrentMove] = useState(0);
+  const currentSquares = history[currentMove];
+  const xIsNext = currentMove % 2 === 0;
 
 
   function handlePlay(nextSquares) {
-
+    const nextHistory = [...history.slice(0, currentMove + 1), nextSquares]
+    // ...history is syntax for, enumerate all items in history
+    setHistory(nextHistory);
+    setCurrentMove(nextHistory.length - 1)
   }
+
+  
+  function jumpTo(nextMove) {
+    setCurrentMove(nextMove);
+  }
+
+
+  const moves = history.map((squares, move) => {
+    let description;
+    if (move > 0) {
+      description = 'Go to move #' + move;
+    } else {
+      description = 'Go to game start';
+    }
+    return (
+      /*
+      'key' is a special and preserved property in react.
+      when an element is created, react extracts the key property and stores the key 
+      directly on the returned element.
+      React automatically uses key to decide which components to update.
+
+      It’s strongly recommended that you assign proper keys whenever you build dynamic lists.
+      If you don’t have an appropriate key, you may want to consider restructuring your data so that you do.
+
+      If no key is specified, React will report an error and use the array index as a key by default.
+      Using the array index as a key is problematic when trying to re-order a list’s items or inserting/removing list items.
+      Explicitly passing key={i} silences the error but has the same problems as array indices and is not recommended in most cases.
+
+      Keys do not need to be globally unique; they only need to be unique between components and their siblings.
+      */
+      <li key={move}>
+          <button onClick={() => jumpTo(move)}>{description}</button>
+      </li>
+    );
+    
+  });
+
+
   return (
     <div
       className="game"
@@ -162,7 +201,7 @@ export default function Game() {
         <div
           className="game-info"
           >
-
+            <ol>{moves}</ol>
           </div>
       </div>
   )
